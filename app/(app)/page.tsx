@@ -1,19 +1,12 @@
 "use client"
 
-import Footer from "./components/Footer"
-import Navbar from "./components/Navbar"
+import { useState } from "react"
 
 export default function Page() {
+  const [authed, setAuthed] = useState(false)
   return (
     <div className="bg-background text-foreground w-full h-screen">
-      <Navbar />
-      {true && (
-        <div className="bg-inherit text-white w-full max-w-sm mx-auto rounded-4xl text-center text-xs mt-5 border border-neutral-700 py-2">
-          <p>This website is currently being worked on.</p>
-          <p>Nothing works yet. Release coming soon!</p>
-        </div>
-      )}
-      <Footer />
+      <div>{authed ? "Logged In" : "Logged Out"}</div>
     </div>
   )
 }
