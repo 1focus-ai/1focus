@@ -1,9 +1,7 @@
 "use client"
 
-import { useAuth } from "../contexts/Auth"
 import Footer from "./components/Footer"
 import Navbar from "./components/Navbar"
-import PromptComponent from "./components/PromptComponent"
 
 export default function Page() {
   return (
@@ -15,7 +13,6 @@ export default function Page() {
           <p>Nothing works yet. Release coming soon!</p>
         </div>
       )}
-      <PromptComponent />
       <Footer />
     </div>
   )
