@@ -1,0 +1,62 @@
+version: '3'
+
+tasks:
+  default:
+    desc: List available tasks.
+    silent: true
+    cmds:
+      - task --list
+
+  setup:
+    desc: Install dependencies with Bun if available, otherwise npm.
+    silent: true
+    cmds:
+      - |
+        set -euo pipefail
+        echo "Checking prerequisites"
+        if ! command -v node >/dev/null 2>&1; then
+          echo "Node.js runtime 'node' not found in PATH."
+          echo "Install it from https://nodejs.org/en/download."
+          exit 1
+        fi
+        if command -v bun >/dev/null 2>&1; then
+          echo "Installing deps (bun install)"
+          if ! bun install >/dev/null 2>&1; then
+            echo "Warning: unable to install dependencies with Bun; try again once network access is available."
+          fi
+        else
+          if ! command -v npm >/dev/null 2>&1; then
+            echo "npm CLI not found in PATH."
+            echo "Install Node.js from https://nodejs.org/en/download."
+            exit 1
+          fi
+          echo "Installing deps (npm install)"
+          npm install >/dev/null 2>&1 || {
+            echo "Warning: unable to install dependencies with npm; try again once network access is available."
+          }
+        fi
+        echo "✔️ you are setup"
+
+  dev:
+    desc: Run the TypeScript compiler in watch mode for rapid iteration.
+    cmds:
+      - |
+        set -euo pipefail
+        if command -v bun >/dev/null 2>&1; then
+          bunx tsc --watch --preserveWatchOutput{{if .CLI_ARGS}} {{.CLI_ARGS}}{{end}}
+        else
+          npx tsc --watch --preserveWatchOutput{{if .CLI_ARGS}} {{.CLI_ARGS}}{{end}}
+        fi
+
+  publish:
+    desc: Build and publish the package to npm (passes CLI args through).
+    cmds:
+      - |
+        set -euo pipefail
+        if ! command -v npm >/dev/null 2>&1; then
+          echo "npm CLI not found in PATH."
+          echo "Install Node.js from https://nodejs.org/en/download."
+          exit 1
+        fi
+        npm run build
+        npm publish{{if .CLI_ARGS}} {{.CLI_ARGS}}{{end}}
