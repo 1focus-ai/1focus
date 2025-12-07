@@ -141,8 +141,14 @@ const signRequest = async (
 
   const payloadHash = await sha256(body)
 
+  // Normalize all headers to lowercase keys
+  const normalizedHeaders: Record<string, string> = {}
+  for (const [k, v] of Object.entries(headers)) {
+    normalizedHeaders[k.toLowerCase()] = v
+  }
+
   const signedHeaders: Record<string, string> = {
-    ...headers,
+    ...normalizedHeaders,
     host: parsedUrl.host,
     "x-amz-date": amzDate,
     "x-amz-content-sha256": payloadHash,
@@ -150,11 +156,9 @@ const signRequest = async (
 
   const sortedHeaderKeys = Object.keys(signedHeaders).sort()
   const canonicalHeaders = sortedHeaderKeys
-    .map((k) => `${k.toLowerCase()}:${signedHeaders[k]?.trim()}`)
+    .map((k) => `${k}:${signedHeaders[k]?.trim()}`)
     .join("\n")
-  const signedHeadersStr = sortedHeaderKeys
-    .map((k) => k.toLowerCase())
-    .join(";")
+  const signedHeadersStr = sortedHeaderKeys.join(";")
 
   const canonicalUri = parsedUrl.pathname
   const canonicalQuerystring = parsedUrl.search.slice(1)
@@ -268,6 +272,9 @@ export const makeR2Layer = (config: R2Config) =>
       const baseUrl = `https://${config.accountId}.r2.cloudflarestorage.com/${config.bucket}`
       const region = "auto"
 
+      // Encode key preserving slashes
+      const encodeKey = (key: string) => key.split("/").map(encodeURIComponent).join("/")
+
       const getPublicUrl = (key: string): string | undefined => {
         if (!config.publicUrl) return undefined
         const base = config.publicUrl.endsWith("/")
@@ -300,7 +307,7 @@ export const makeR2Layer = (config: R2Config) =>
 
         get: (key) =>
           Effect.gen(function* () {
-            const url = `${baseUrl}/${encodeURIComponent(key)}`
+            const url = `${baseUrl}/${encodeKey(key)}`
             const signed = yield* doSignRequest("GET", url)
 
             const response = yield* httpClient
@@ -358,12 +365,14 @@ export const makeR2Layer = (config: R2Config) =>
                   ? body
                   : new Uint8Array(body)
 
-            const headers: Record<string, string> = {}
-            if (options.contentType) headers["Content-Type"] = options.contentType
+            const contentType = options.contentType ?? "application/octet-stream"
+            const headers: Record<string, string> = {
+              "content-type": contentType,
+            }
             if (options.cacheControl)
-              headers["Cache-Control"] = options.cacheControl
+              headers["cache-control"] = options.cacheControl
             if (options.contentDisposition) {
-              headers["Content-Disposition"] = options.contentDisposition
+              headers["content-disposition"] = options.contentDisposition
             }
             if (options.customMetadata) {
               for (const [k, v] of Object.entries(options.customMetadata)) {
@@ -371,14 +380,14 @@ export const makeR2Layer = (config: R2Config) =>
               }
             }
 
-            const url = `${baseUrl}/${encodeURIComponent(key)}`
+            const url = `${baseUrl}/${encodeKey(key)}`
             const signed = yield* doSignRequest("PUT", url, bodyBytes.buffer as ArrayBuffer, headers)
 
             const response = yield* httpClient
               .execute(
                 HttpClientRequest.put(signed.url).pipe(
                   HttpClientRequest.setHeaders(signed.headers),
-                  HttpClientRequest.bodyUint8Array(bodyBytes),
+                  HttpClientRequest.bodyUint8Array(bodyBytes, contentType),
                 ),
               )
               .pipe(
@@ -424,7 +433,7 @@ export const makeR2Layer = (config: R2Config) =>
 
         delete: (key) =>
           Effect.gen(function* () {
-            const url = `${baseUrl}/${encodeURIComponent(key)}`
+            const url = `${baseUrl}/${encodeKey(key)}`
             const signed = yield* doSignRequest("DELETE", url)
 
             const response = yield* httpClient
@@ -461,7 +470,7 @@ export const makeR2Layer = (config: R2Config) =>
 
         head: (key) =>
           Effect.gen(function* () {
-            const url = `${baseUrl}/${encodeURIComponent(key)}`
+            const url = `${baseUrl}/${encodeKey(key)}`
             const signed = yield* doSignRequest("HEAD", url)
 
             const response = yield* httpClient

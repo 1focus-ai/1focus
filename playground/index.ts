@@ -1,6 +1,7 @@
 import { Console, Effect } from "effect"
 import { NodeRuntime } from "@effect/platform-node"
-import { R2, R2FromUrl } from "@1focus/storage"
+// Use local import for development, switch to "@1focus/storage" for production
+import { R2, R2FromUrl } from "../packages/storage/src/index.js"
 
 const program = Effect.gen(function* () {
   yield* Console.log("=== @1focus/storage Playground ===\n")

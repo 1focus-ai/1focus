@@ -94,31 +94,5 @@ description = "Build and publish to npm"
 
 [[tasks]]
 name = "release"
-command = '''
-bash <<'BASH'
-set -e
-echo "=== Release @1focus/storage ==="
-
-# Get version bump type
-VERSION_TYPE="${1:-patch}"
-echo "Version bump: $VERSION_TYPE"
-
-# Bump version
-npm version $VERSION_TYPE --no-git-tag-version
-NEW_VERSION=$(node -p "require('./package.json').version")
-echo "New version: $NEW_VERSION"
-
-# Build
-echo "Building..."
-rm -rf dist
-bun run build
-
-# Publish
-echo "Publishing..."
-npm publish --access public
-
-echo ""
-echo "Released @1focus/storage@$NEW_VERSION"
-BASH
-'''
+command = "./release.sh"
 description = "Bump version and publish (usage: flow release [patch|minor|major])"

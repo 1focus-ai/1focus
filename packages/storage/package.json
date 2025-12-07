@@ -1,6 +1,6 @@
 {
   "name": "@1focus/storage",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Cloudflare R2 storage with Effect",
   "type": "module",
   "main": "dist/index.js",
@@ -15,7 +15,9 @@
       "import": "./dist/r2.js"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
@@ -26,7 +28,13 @@
     "type": "git",
     "url": "https://github.com/1focus-ai/1focus"
   },
-  "keywords": ["cloudflare", "r2", "storage", "effect", "s3"],
+  "keywords": [
+    "cloudflare",
+    "r2",
+    "storage",
+    "effect",
+    "s3"
+  ],
   "author": "1focus",
   "license": "MIT",
   "dependencies": {

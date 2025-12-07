@@ -10,7 +10,7 @@
     "typescript": "^5"
   },
   "dependencies": {
-    "@1focus/storage": "^0.0.1",
+    "@1focus/storage": "file:../packages/storage",
     "@effect/platform": "^0.93.6",
     "@effect/platform-node": "^0.103.0",
     "effect": "^3.19.9"

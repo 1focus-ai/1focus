@@ -2,7 +2,7 @@
   "name": "1focus-monorepo",
   "private": true,
   "type": "module",
-  "workspaces": ["packages/*"],
+  "workspaces": ["packages/*", "playground"],
   "scripts": {
     "build": "turbo build",
     "dev": "turbo dev",

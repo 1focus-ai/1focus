@@ -13,7 +13,7 @@ echo ""
 
 read -p "R2 Account ID (from URL: dash.cloudflare.com/<ACCOUNT_ID>/r2): " account_id
 read -p "R2 Access Key ID: " access_key
-read -p "R2 Secret Access Key: " -s secret_key
+read -p "R2 Secret Access Key: " secret_key
 echo ""
 read -p "R2 Bucket Name: " bucket
 read -p "R2 Public URL (optional, press enter to skip): " public_url
