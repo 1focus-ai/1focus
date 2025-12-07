@@ -18,6 +18,15 @@ export {
   type R2PutOptions,
 } from "./r2.js"
 
+// Config
+export {
+  loadR2Config,
+  loadR2ConfigEffect,
+  saveGlobalConfig,
+  getConfigPath,
+  hasGlobalConfig,
+} from "./config.js"
+
 // Asset Helpers
 export {
   makeAssetService,

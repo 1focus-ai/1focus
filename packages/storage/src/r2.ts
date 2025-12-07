@@ -703,35 +703,20 @@ export const toR2Url = (config: R2Config): string => {
 /** Create R2 layer from connection string */
 export const R2FromUrl = (url: string) => R2Live(parseR2Url(url))
 
-/** Create R2 layer from environment variables */
+/** Create R2 layer from environment variables or global config */
 export const R2FromEnv = Effect.gen(function* () {
-  // Try R2_URL first (single connection string)
-  const r2Url = process.env.R2_URL
-  if (r2Url) {
-    try {
-      return R2Live(parseR2Url(r2Url))
-    } catch (e) {
-      return yield* Effect.fail(
-        new R2ConfigError({ message: `Invalid R2_URL: ${e}` }),
-      )
-    }
-  }
+  // Import dynamically to avoid circular dependency
+  const { loadR2Config } = yield* Effect.promise(() => import("./config.js"))
 
-  // Fall back to individual env vars
-  const accountId = process.env.R2_ACCOUNT_ID
-  const accessKeyId = process.env.R2_ACCESS_KEY_ID
-  const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY
-  const bucket = process.env.R2_BUCKET
-  const publicUrl = process.env.R2_PUBLIC_URL
-
-  if (!accountId || !accessKeyId || !secretAccessKey || !bucket) {
+  const config = loadR2Config()
+  if (!config) {
     return yield* Effect.fail(
       new R2ConfigError({
         message:
-          "Missing R2 config. Set R2_URL or: R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET",
+          "No R2 config found. Set R2_URL env var or run 'npx @1focus/storage init'",
       }),
     )
   }
 
-  return R2Live({ accountId, accessKeyId, secretAccessKey, bucket, publicUrl })
+  return R2Live(config)
 })

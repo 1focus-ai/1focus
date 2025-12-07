@@ -1,10 +1,14 @@
 {
   "name": "@1focus/storage",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Cloudflare R2 storage with Effect",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "bin": {
+    "@1focus/storage": "./dist/cli.js",
+    "1focus-storage": "./dist/cli.js"
+  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",

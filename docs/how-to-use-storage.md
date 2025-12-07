@@ -1,6 +1,6 @@
 # @1focus/storage
 
-Cloudflare R2 storage with Effect.
+Cloudflare R2 storage with Effect. Zero-config after initial setup.
 
 ## Install
 
@@ -8,105 +8,77 @@ Cloudflare R2 storage with Effect.
 bun add @1focus/storage effect @effect/platform @effect/platform-node
 ```
 
-## Setup
-
-Get your R2 credentials from [Cloudflare Dashboard](https://dash.cloudflare.com) → R2 → Manage R2 API Tokens.
-
-Set the `R2_URL` environment variable:
+## Setup (one-time)
 
 ```bash
-R2_URL=r2://ACCESS_KEY:SECRET@ACCOUNT_ID/BUCKET
+npx @1focus/storage init
 ```
 
-Optional: Add public URL for public access:
+This prompts for your R2 credentials and saves them globally to `~/.config/1focus/r2.env`. You only need to do this once per machine.
 
-```bash
-R2_URL=r2://ACCESS_KEY:SECRET@ACCOUNT_ID/BUCKET?publicUrl=https://pub-xxx.r2.dev
-```
+To get credentials:
+1. Go to [Cloudflare Dashboard](https://dash.cloudflare.com) → R2 Object Storage
+2. Create a bucket (if needed)
+3. Go to "Manage R2 API Tokens" → Create API Token
+4. Your Account ID is in the URL: `dash.cloudflare.com/<ACCOUNT_ID>/r2`
 
 ## Usage
 
 ```typescript
 import { Effect } from "effect"
 import { NodeRuntime } from "@effect/platform-node"
-import { R2, R2FromUrl } from "@1focus/storage"
+import { R2, R2FromEnv } from "@1focus/storage"
 
 const program = Effect.gen(function* () {
   const r2 = yield* R2
 
-  // Upload text
-  yield* r2.put("hello.txt", "Hello world!", { contentType: "text/plain" })
+  // Upload
+  yield* r2.put("hello.txt", "Hello world!")
+  yield* r2.putJson("data.json", { name: "test" })
 
-  // Upload JSON
-  yield* r2.putJson("data.json", { name: "test", value: 42 })
-
-  // Read text
+  // Read
   const text = yield* r2.getText("hello.txt")
-
-  // Read JSON
   const data = yield* r2.getJson<{ name: string }>("data.json")
 
-  // Get raw bytes
-  const bytes = yield* r2.get("file.bin")
-
-  // Check if exists
-  const exists = yield* r2.exists("hello.txt")
-
-  // Get metadata
-  const meta = yield* r2.head("hello.txt")
-
-  // List objects
+  // List & manage
   const list = yield* r2.list({ prefix: "uploads/" })
-
-  // List all (handles pagination)
-  const all = yield* r2.listAll("uploads/")
-
-  // Copy
-  yield* r2.copy("hello.txt", "hello-backup.txt")
-
-  // Delete
   yield* r2.delete("hello.txt")
-
-  // Delete many
-  yield* r2.deleteMany(["file1.txt", "file2.txt"])
-
-  // Get public URL (if publicUrl configured)
-  const url = r2.getPublicUrl("hello.txt")
 })
 
-program.pipe(
-  Effect.provide(R2FromUrl(process.env.R2_URL!)),
-  NodeRuntime.runMain,
-)
+program.pipe(Effect.provide(R2FromEnv), NodeRuntime.runMain)
 ```
 
-## API
+That's it. No environment variables needed in your project.
 
-### `R2FromUrl(url: string)`
+## Config Resolution
 
-Create R2 layer from connection string.
+`R2FromEnv` looks for config in this order:
+1. `R2_URL` environment variable
+2. Individual `R2_*` environment variables
+3. Global config at `~/.config/1focus/r2.env`
 
-### `R2Live(config: R2Config)`
+## CLI Commands
 
-Create R2 layer from config object:
-
-```typescript
-import { R2Live } from "@1focus/storage"
-
-const layer = R2Live({
-  accountId: "...",
-  accessKeyId: "...",
-  secretAccessKey: "...",
-  bucket: "my-bucket",
-  publicUrl: "https://pub-xxx.r2.dev", // optional
-})
+```bash
+npx @1focus/storage init     # Set up credentials
+npx @1focus/storage status   # Show current config
 ```
 
-### Methods
+## API Reference
+
+### Layer Providers
+
+| Function | Description |
+|----------|-------------|
+| `R2FromEnv` | Auto-loads config (recommended) |
+| `R2FromUrl(url)` | From connection string |
+| `R2Live(config)` | From config object |
+
+### R2 Service Methods
 
 | Method | Description |
 |--------|-------------|
-| `put(key, body, options?)` | Upload data (string, ArrayBuffer, Uint8Array) |
+| `put(key, body, options?)` | Upload data |
 | `putJson(key, data, options?)` | Upload JSON |
 | `get(key)` | Get raw bytes |
 | `getText(key)` | Get as text |
@@ -114,10 +86,10 @@ const layer = R2Live({
 | `head(key)` | Get metadata |
 | `exists(key)` | Check if exists |
 | `list(options?)` | List objects |
-| `listAll(prefix?)` | List all objects (handles pagination) |
+| `listAll(prefix?)` | List all (handles pagination) |
 | `copy(src, dest)` | Copy object |
 | `delete(key)` | Delete object |
-| `deleteMany(keys)` | Delete multiple objects |
+| `deleteMany(keys)` | Delete multiple |
 | `getPublicUrl(key)` | Get public URL |
 
 ### Options
@@ -152,3 +124,13 @@ program.pipe(
   ),
 )
 ```
+
+## Per-Project Override
+
+If you need different buckets per project, set `R2_URL` in that project's `.env`:
+
+```bash
+R2_URL=r2://ACCESS_KEY:SECRET@ACCOUNT_ID/my-bucket
+```
+
+This takes precedence over the global config.

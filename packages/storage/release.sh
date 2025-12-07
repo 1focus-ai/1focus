@@ -11,13 +11,21 @@ echo "Current version: $CURRENT_VERSION"
 # Get version bump type
 VERSION_TYPE="${1:-patch}"
 echo "Version bump: $VERSION_TYPE"
-echo ""
 
-# Bump version
-npm version $VERSION_TYPE --no-git-tag-version
-NEW_VERSION=$(node -p "require('./package.json').version")
+# Calculate new version
+IFS='.' read -r major minor patch <<< "$CURRENT_VERSION"
+case $VERSION_TYPE in
+  major) NEW_VERSION="$((major + 1)).0.0" ;;
+  minor) NEW_VERSION="$major.$((minor + 1)).0" ;;
+  patch) NEW_VERSION="$major.$minor.$((patch + 1))" ;;
+  *) echo "Invalid version type: $VERSION_TYPE"; exit 1 ;;
+esac
+
 echo "New version: $NEW_VERSION"
 echo ""
+
+# Update package.json version using node
+node -e "const pkg = require('./package.json'); pkg.version = '$NEW_VERSION'; require('fs').writeFileSync('./package.json', JSON.stringify(pkg, null, 2) + '\n')"
 
 # Build
 echo "Building..."
