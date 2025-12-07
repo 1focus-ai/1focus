@@ -1,0 +1,9 @@
+[[tasks]]
+name = "run"
+command = "bun run index.ts"
+description = "Run playground"
+
+[[tasks]]
+name = "setup"
+command = "./setup.sh"
+description = "Interactive R2 credentials setup (run in terminal)"

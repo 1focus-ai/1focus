@@ -1,0 +1,124 @@
+[[tasks]]
+name = "setup"
+command = '''
+bash <<'BASH'
+set -e
+echo "=== @1focus/storage R2 Setup ==="
+echo ""
+echo "This will create a .env file with your R2 credentials."
+echo "Get these from: https://dash.cloudflare.com → R2 → Manage R2 API Tokens"
+echo ""
+
+ENV_FILE=".env"
+
+read -p "R2 Account ID: " account_id
+read -p "R2 Access Key ID: " access_key
+read -p "R2 Secret Access Key: " -s secret_key
+echo ""
+read -p "R2 Bucket Name: " bucket
+read -p "R2 Public URL (optional, press enter to skip): " public_url
+
+# Build the connection string
+r2_url="r2://${access_key}:${secret_key}@${account_id}/${bucket}"
+if [ -n "$public_url" ]; then
+  r2_url="${r2_url}?publicUrl=${public_url}"
+fi
+
+# Write .env with single R2_URL (recommended)
+cat > "$ENV_FILE" << EOF
+# Single connection string (recommended)
+R2_URL=$r2_url
+
+# Or use individual vars:
+# R2_ACCOUNT_ID=$account_id
+# R2_ACCESS_KEY_ID=$access_key
+# R2_SECRET_ACCESS_KEY=$secret_key
+# R2_BUCKET=$bucket
+EOF
+
+if [ -n "$public_url" ]; then
+  echo "# R2_PUBLIC_URL=$public_url" >> "$ENV_FILE"
+fi
+
+echo ""
+echo "Created $ENV_FILE with R2_URL connection string"
+echo ""
+echo "Usage in your code:"
+echo '  import { R2FromUrl } from "@1focus/storage"'
+echo '  Effect.provide(R2FromUrl(process.env.R2_URL!))'
+echo ""
+echo "Run 'flow test' to verify your setup"
+BASH
+'''
+description = "Setup R2 credentials interactively"
+
+[[tasks]]
+name = "test"
+command = "bun run src/test.ts"
+description = "Test R2 storage"
+
+[[tasks]]
+name = "build"
+command = "rm -rf dist && bun run build"
+description = "Build the package"
+
+[[tasks]]
+name = "publish"
+command = '''
+bash <<'BASH'
+set -e
+echo "=== Publishing @1focus/storage ==="
+
+# Build first
+echo "Building..."
+rm -rf dist
+bun run build
+
+# Check if logged in to npm
+if ! npm whoami &>/dev/null; then
+  echo "Not logged in to npm. Running npm login..."
+  npm login
+fi
+
+# Publish with public access (required for scoped packages)
+echo "Publishing to npm..."
+read -p "Enter OTP code: " otp
+npm publish --access public --otp="$otp"
+
+echo ""
+echo "Published @1focus/storage to npm"
+echo "Install with: bun add @1focus/storage"
+BASH
+'''
+description = "Build and publish to npm"
+
+[[tasks]]
+name = "release"
+command = '''
+bash <<'BASH'
+set -e
+echo "=== Release @1focus/storage ==="
+
+# Get version bump type
+VERSION_TYPE="${1:-patch}"
+echo "Version bump: $VERSION_TYPE"
+
+# Bump version
+npm version $VERSION_TYPE --no-git-tag-version
+NEW_VERSION=$(node -p "require('./package.json').version")
+echo "New version: $NEW_VERSION"
+
+# Build
+echo "Building..."
+rm -rf dist
+bun run build
+
+# Publish
+echo "Publishing..."
+npm publish --access public
+
+echo ""
+echo "Released @1focus/storage@$NEW_VERSION"
+BASH
+'''
+description = "Bump version and publish (usage: flow release [patch|minor|major])"

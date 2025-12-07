@@ -1,0 +1,29 @@
+[[tasks]]
+name = "build"
+command = "bun run build"
+description = "Build all packages"
+
+[[tasks]]
+name = "test"
+command = "bun run test"
+description = "Test all packages"
+
+[[tasks]]
+name = "clean"
+command = "bun run clean"
+description = "Clean all build artifacts"
+
+[[tasks]]
+name = "test-storage"
+command = "cd packages/storage && bun run src/test.ts"
+description = "Test R2 storage (requires R2_* env vars)"
+
+[[tasks]]
+name = "playground"
+command = "cd playground && bun run index.ts"
+description = "Run playground tests"
+
+[[tasks]]
+name = "playground-setup"
+command = "cd playground && flow setup"
+description = "Setup R2 credentials for playground"
