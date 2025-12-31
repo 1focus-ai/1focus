@@ -1,0 +1,37 @@
+{
+  "name": "@1focus/logs",
+  "version": "0.0.1",
+  "description": "1focus logs client",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "bun test",
+    "prepublishOnly": "npm run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/1focus-ai/1focus"
+  },
+  "keywords": [
+    "logs",
+    "observability",
+    "1focus"
+  ],
+  "author": "1focus",
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.7.2"
+  }
+}
